@@ -1,5 +1,163 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Оценка недвижимости</h1>
+<div class="container my-5">
+    <h1 class="mb-4">Оценка стоимости недвижимости</h1>
+    <p class="text-muted mb-4">Выберите характеристики объекта из списков для расчета рыночной стоимости.</p>
+
+    <form action="{{ url_for('predict') }}" method="POST" id="predictForm">
+        
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Шаг 1: Адрес и Локация (Где находится?)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="region" class="form-label">Субъект РФ</label>
+                        <select class="form-select form-control" id="region" name="region" required>
+                            <option value="" selected disabled>Выберите субъект РФ...</option>
+                            {% for reg in regions %}
+                                <option value="{{ reg }}">{{ reg }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="city" class="form-label">Населенный пункт</label>
+                        <select class="form-select form-control" id="city" name="city" required>
+                            <option value="" selected disabled>Сначала выберите субъект РФ...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="district" class="form-label">Район</label>
+                        <select class="form-select form-control" id="district" name="district" required>
+                            <option value="" selected disabled>Выберите вариант...</option>
+                            <option value="center">Центральный район</option>
+                            <option value="inner_ring">Ближний к центру / Срединный</option>
+                            <option value="residential">Спальный район</option>
+                            <option value="outskirts">Окраина города</option>
+                            <option value="suburb">Пригород / За городом</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="street" class="form-label">Тип улицы</label>
+                        <select class="form-select form-control" id="street" name="street" required>
+                            <option value="" selected disabled>Выберите вариант...</option>
+                            <option value="avenue">Проспект / Центральная улица</option>
+                            <option value="main_street">Крупная магистраль / Шоссе</option>
+                            <option value="regular_street">Обычная жилая улица</option>
+                            <option value="lane">Переулок / Проезд / Бульвар</option>
+                            <option value="microdistrict">Микрорайон / ЖК / Квартал</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="house_number" class="form-label">Расположение дома</label>
+                        <select class="form-select form-control" id="house_number" name="house_number" required>
+                            <option value="" selected disabled>Выберите вариант...</option>
+                            <option value="first_line">Первая линия (у дороги)</option>
+                            <option value="second_line">Вторая линия / Внутри квартала</option>
+                            <option value="gated_complex">Закрытая территория ЖК</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="remoteness" class="form-label">Удаленность от центра или метро</label>
+                        <select class="form-select form-control" id="remoteness" name="remoteness" required>
+                            <option value="" selected disabled>Выберите вариант...</option>
+                            <option value="walk_10">До 10 минут пешком</option>
+                            <option value="walk_20">10–20 минут пешком</option>
+                            <option value="transport_15">До 15 минут на транспорте</option>
+                            <option value="far">Далеко</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Шаг 2: О доме и здании (В каком доме?)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="property_type" class="form-label">Тип недвижимости</label>
+                        <select class="form-select form-control" id="property_type" name="property_type" required onchange="toggleHouseFields()">
+                            <option value="flat" selected>Квартира</option>
+                            <option value="house">Частный дом</option>
+                            <option value="house_part">Часть дома</option>
+                            <option value="room">Комната</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="wall_material" class="form-label">Материал стен</label>
+                        <select class="form-select form-control" id="wall_material" name="wall_material" required>
+                            <option value="" selected disabled>Выберите материал...</option>
+                            <option value="monolith">Монолит</option>
+                            <option value="brick">Кирпич</option>
+                            <option value="panel">Панель</option>
+                            <option value="block">Блочный</option>
+                            <option value="wood">Дерево</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="build_year" class="form-label">Год постройки дома</label>
+                        <select class="form-select form-control" id="build_year" name="build_year" required>
+                            <option value="" selected disabled>Выберите период...</option>
+                            <option value="before_1955">До 1955 (Сталинки / Дореволюционные)</option>
+                            <option value="1956_1970">1956 – 1970 (Хрущевки)</option>
+                            <option value="1971_1990">1971 – 1990 (Брежневки / Поздний СССР)</option>
+                            <option value="1991_2005">1991 – 2005</option>
+                            <option value="2006_2015">2006 – 2015</option>
+                            <option value="2016_2022">2016 – 2022</option>
+                            <option value="2023_plus">2023 – настоящее время / Строится</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="total_floors" class="form-label">Этажность дома</label>
+                        <select class="form-select form-control" id="total_floors" name="total_floors" required>
+                            <option value="" selected disabled>Выберите этажность...</option>
+                            <option value="1_2">1 – 2 этажа</option>
+                            <option value="3_5">3 – 5 этажей</option>
+                            <option value="6_9">6 – 9 этажей</option>
+                            <option value="10_16">10 – 16 этажей</option>
+                            <option value="17_25">17 – 25 этажей</option>
+                            <option value="26_plus">26 и более этажей</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4" id="floor_field">
+                        <label for="floor" class="form-label">Этаж расположения</label>
+                        <select class="form-select form-control" id="floor" name="floor" required>
+                            <option value="" selected disabled>Выберите этаж...</option>
+                            <option value="first">Первый этаж</option>
+                            <option value="2_5">2 – 5 этаж</option>
+                            <option value="6_10">6 – 10 этаж</option>
+                            <option value="11_20">11 – 20 этаж</option>
+                            <option value="21_plus">21 этаж и выше (не последний)</option>
+                            <option value="last">Последний этаж</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4" id="elevator_field">
+                        <label for="elevator" class="form-label">Наличие лифта</label>
+                        <select class="form-select form-control" id="elevator" name="elevator" required>
+                            <option value="none">Нет</option>
+                            <option value="passenger" selected>Пассажирский</option>
+                            <option value="cargo">Грузовой</option>
+                            <option value="both">Пассажирский + Грузовой</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="land_area_field" style="display: none;">
+                        <label for="land_area" class="form-label">Площадь участка (в сотках)</label>
+                        <select class="form-select form-control" id="land_area" name="land_area">
+                            <option value="" selected>Не выбрано</option>
 {% endblock %}
