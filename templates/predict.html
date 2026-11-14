@@ -8,8 +8,6 @@
     <form action="{{ url_for('predict') }}" method="POST" id="predictForm">
         
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Шаг 1: Адрес и Локация (Где находится?)</h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -86,8 +84,6 @@
         </div>
 
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Шаг 2: О доме и здании (В каком доме?)</h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -157,4 +153,7 @@
                         <label for="elevator" class="form-label">Наличие лифта</label>
                         <select class="form-select form-control" id="elevator" name="elevator" required>
                             <option value="none">Нет</option>
+                            <option value="none">Только пассажирский</option>
+                            <option value="none">Только грузовой</option>
+                            <option value="none">Пассажирский и грузовой</option>
 {% endblock %}
