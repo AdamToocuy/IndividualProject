@@ -30,14 +30,21 @@ def home():
 def predict():
     regions, region_to_cities = load_geo_data()
     
+    # Получаем выбранный регион из URL (если пользователь его уже выбрал)
+    selected_region = request.args.get('region', '')
+    cities = region_to_cities.get(selected_region, [])
+    
     if request.method == 'POST':
         user_input = request.form.to_dict()
         print("Полученные данные:", user_input)
+        selected_region = user_input.get('region', '')
+        cities = region_to_cities.get(selected_region, [])
         
     return render_template(
         'predict.html',
         regions=regions,
-        region_to_cities=region_to_cities
+        cities=cities,
+        selected_region=selected_region
     )
 
 @app.route('/info')

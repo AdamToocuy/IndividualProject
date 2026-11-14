@@ -14,19 +14,26 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="region" class="form-label">Субъект РФ</label>
-                        <select class="form-select form-control" id="region" name="region" required>
-                            <option value="" selected disabled>Выберите субъект РФ...</option>
+                        <label for="predict_region" class="form-label">Субъект РФ</label>
+                        <select class="form-select form-control" id="predict_region" name="region" required onchange="window.location.href='{{ url_for('predict') }}?region=' + encodeURIComponent(this.value)">
+                            <option value="" disabled {% if not selected_region %}selected{% endif %}>Выберите субъект РФ...</option>
                             {% for reg in regions %}
-                                <option value="{{ reg }}">{{ reg }}</option>
+                                <option value="{{ reg }}" {% if reg == selected_region %}selected{% endif %}>{{ reg }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="city" class="form-label">Населенный пункт</label>
-                        <select class="form-select form-control" id="city" name="city" required>
-                            <option value="" selected disabled>Сначала выберите субъект РФ...</option>
+                        <label for="predict_city" class="form-label">Населенный пункт</label>
+                        <select class="form-select form-control" id="predict_city" name="city" required>
+                            {% if cities %}
+                                <option value="" selected disabled>Выберите населенный пункт...</option>
+                                {% for c in cities %}
+                                    <option value="{{ c }}">{{ c }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" selected disabled>Сначала выберите субъект РФ...</option>
+                            {% endif %}
                         </select>
                     </div>
 
@@ -150,14 +157,4 @@
                         <label for="elevator" class="form-label">Наличие лифта</label>
                         <select class="form-select form-control" id="elevator" name="elevator" required>
                             <option value="none">Нет</option>
-                            <option value="passenger" selected>Пассажирский</option>
-                            <option value="cargo">Грузовой</option>
-                            <option value="both">Пассажирский + Грузовой</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6" id="land_area_field" style="display: none;">
-                        <label for="land_area" class="form-label">Площадь участка (в сотках)</label>
-                        <select class="form-select form-control" id="land_area" name="land_area">
-                            <option value="" selected>Не выбрано</option>
 {% endblock %}
