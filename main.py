@@ -1,9 +1,10 @@
 import os
 import json
-from flask import Flask, render_template, send_from_directory, request, jsonify
-from geo_search import search_address_suggestions
+from flask import Flask, render_template, send_from_directory, request
+from hints_streets import hints_bp
 
 app = Flask(__name__)
+app.register_blueprint(hints_bp)
 
 JSON_PATH = os.path.join(app.root_path, 'data.json')
 with open(JSON_PATH, 'r', encoding='utf-8') as f:
@@ -15,22 +16,6 @@ REGIONS = list(REGION_TO_CITIES.keys())
 @app.route('/')
 def home():
     return render_template('index.html')
-
-
-@app.route('/api/suggest-address', methods=['GET', 'POST'])
-def suggest_address():
-    if request.method == 'POST':
-        data = request.get_json(silent=True) or {}
-        query = data.get('query', '')
-        region = data.get('region', '')
-        city = data.get('city', '')
-    else:
-        query = request.args.get('q', '')
-        region = request.args.get('region', '')
-        city = request.args.get('city', '')
-
-    suggestions = search_address_suggestions(query=query, region=region, city=city)
-    return jsonify(suggestions)
 
 
 @app.route('/predict', methods=['GET', 'POST'])

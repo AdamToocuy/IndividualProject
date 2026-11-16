@@ -37,20 +37,20 @@
                         </select>
                     </div>
 
-                    <div class="md:col-4" style="position: relative;">
-                        <label for="street_input" class="form-label">Улица</label>
-                        <input type="text" class="form-control" id="street_input" name="street"
-                               oninput="handleStreetInput(this.value)"
-                               placeholder="{% if selected_city %}Начните вводить улицу...{% else %}Сначала выберите город...{% endif %}"
-                               autocomplete="off" required {% if not selected_city %}disabled{% endif %}>
-                        
-                        <div id="street_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; background: #212529; border: 1px solid #495057; border-radius: 6px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
-                        <small id="address-meta-info" style="color: #20c997; display: block; margin-top: 4px;"></small>
+                <div class="md:col-4" style="position: relative;">
+                    <label for="street_input" class="form-label">Улица</label>
+                    <input type="text" class="form-control" id="street_input" name="street"
+                        oninput="handleStreetInput(this.value)"
+                        placeholder="{% if selected_city %}Начните вводить улицу...{% else %}Сначала выберите город...{% endif %}"
+                        autocomplete="off" required {% if not selected_city %}disabled{% endif %}>
+                    
+                    <div id="street_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; background: #212529; border: 1px solid #495057; border-radius: 6px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
+                    <small id="address-meta-info" style="color: #20c997; display: block; margin-top: 4px;"></small>
 
-                        <input type="hidden" id="hidden_district" name="district" value="unknown">
-                        <input type="hidden" id="hidden_lat" name="lat" value="">
-                        <input type="hidden" id="hidden_lon" name="lon" value="">
-                    </div>
+                    <input type="hidden" id="hidden_district" name="district" value="unknown">
+                    <input type="hidden" id="hidden_lat" name="lat" value="">
+                    <input type="hidden" id="hidden_lon" name="lon" value="">
+                </div>
 
                     <div class="md:col-6">
                         <label for="house_number" class="form-label">Расположение дома</label>
@@ -160,7 +160,7 @@
 
         <div class="md:col-3">
 
-                        <        <div class="card mb-4 shadow-sm">
+                                <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <div class="row g-3">
                     <div class="md:col-3">
@@ -266,7 +266,6 @@
     function handleStreetInput(val) {
         const query = val.trim();
         const dropdown = document.getElementById('street_dropdown');
-        const metaInfo = document.getElementById('address-meta-info');
         clearTimeout(streetTimer);
 
         if (query.length < 2) {
@@ -277,43 +276,26 @@
         streetTimer = setTimeout(function () {
             const region = document.getElementById('predict_region').value;
             const city = document.getElementById('predict_city').value;
-            const url = "{{ url_for('suggest_address') }}?q=" + encodeURIComponent(query) +
+            const url = "{{ url_for('hints.get_street_hints') }}?q=" + encodeURIComponent(query) +
                         "&region=" + encodeURIComponent(region) +
                         "&city=" + encodeURIComponent(city);
 
             fetch(url)
-                .then(function (r) { return r.json(); })
-                .then(function (list) {
-                    dropdown.innerHTML = '';
-                    if (!list || list.length === 0) {
-                        dropdown.style.display = 'none';
-                        return;
-                    }
-                    list.forEach(function (item) {
-                        const row = document.createElement('div');
-                        row.textContent = item.text || item.label;
-                        row.style.padding = '8px 12px';
-                        row.style.cursor = 'pointer';
-                        row.style.borderBottom = '1px solid #343a40';
-                        row.style.color = '#f8f9fa';
-                        row.style.backgroundColor = '#212529';
-
-                        row.onmouseover = function () { row.style.backgroundColor = '#343a40'; };
-                        row.onmouseout = function () { row.style.backgroundColor = '#212529'; };
-
-                        row.onclick = function () {
-                            document.getElementById('street_input').value = item.text || item.label;
-                            document.getElementById('hidden_district').value = item.district || 'unknown';
-                            document.getElementById('hidden_lat').value = item.lat || '';
-                            document.getElementById('hidden_lon').value = item.lon || '';
-                            metaInfo.textContent = item.district && item.district !== 'unknown' ? 'Район: ' + item.district : '';
-                            dropdown.style.display = 'none';
-                        };
-                        dropdown.appendChild(row);
-                    });
-                    dropdown.style.display = 'block';
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    dropdown.innerHTML = html;
+                    dropdown.style.display = html ? 'block' : 'none';
                 });
         }, 300);
+    }
+
+    function selectStreet(street, district, lat, lon, districtLabel) {
+        document.getElementById('street_input').value = street;
+        document.getElementById('hidden_district').value = district;
+        document.getElementById('hidden_lat').value = lat;
+        document.getElementById('hidden_lon').value = lon;
+        document.getElementById('address-meta-info').textContent = districtLabel;
+        document.getElementById('street_dropdown').style.display = 'none';
     }
 
     document.addEventListener('click', function (e) {
@@ -334,4 +316,6 @@
         document.getElementById('balcony_field').style.display = isHouse ? 'none' : 'block';
     }
 </script>
+
+
 {% endblock %}
