@@ -1,3 +1,6 @@
 real_property_deals_russia_2024-2026.csv
 node_modules/
 .venv/
+.env
+__pycache__/
+*.pyc
