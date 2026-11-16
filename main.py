@@ -4,6 +4,7 @@ from flask import Flask, render_template, send_from_directory, request
 
 app = Flask(__name__)
 
+#Чтение json файла data.json (Регионы и населённые пункты)
 JSON_PATH = os.path.join(app.root_path, 'data.json')
 with open(JSON_PATH, 'r', encoding='utf-8') as f:
     REGION_TO_CITIES = json.load(f)
