@@ -8,12 +8,12 @@
     <form action="{{ url_for('predict') }}" method="POST" id="predictForm">
         
         <div class="card mb-4 shadow-sm">
-            </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="md:col-4">
                         <label for="predict_region" class="form-label">Субъект РФ</label>
-                        <select class="form-select form-control" id="predict_region" name="region" required onchange="window.location.href='{{ url_for('predict') }}?region=' + encodeURIComponent(this.value)">
+                        <select class="form-select form-control" id="predict_region" name="region" required
+                                onchange="window.location.href='{{ url_for('predict') }}?region=' + encodeURIComponent(this.value)">
                             <option value="" disabled {% if not selected_region %}selected{% endif %}>Выберите субъект РФ...</option>
                             {% for reg in regions %}
                                 <option value="{{ reg }}" {% if reg == selected_region %}selected{% endif %}>{{ reg }}</option>
@@ -21,13 +21,15 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="md:col-4">
                         <label for="predict_city" class="form-label">Населенный пункт</label>
-                        <select class="form-select form-control" id="predict_city" name="city" required>
+                        <select class="form-select form-control" id="predict_city" name="city" required
+                                {% if not cities %}disabled{% endif %}
+                                onchange="window.location.href='{{ url_for('predict') }}?region=' + encodeURIComponent(document.getElementById('predict_region').value) + '&city=' + encodeURIComponent(this.value)">
                             {% if cities %}
-                                <option value="" selected disabled>Выберите населенный пункт...</option>
+                                <option value="" disabled {% if not selected_city %}selected{% endif %}>Выберите населенный пункт...</option>
                                 {% for c in cities %}
-                                    <option value="{{ c }}">{{ c }}</option>
+                                    <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
                                 {% endfor %}
                             {% else %}
                                 <option value="" selected disabled>Сначала выберите субъект РФ...</option>
@@ -35,31 +37,22 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
-                        <label for="district" class="form-label">Район</label>
-                        <select class="form-select form-control" id="district" name="district" required>
-                            <option value="" selected disabled>Выберите вариант...</option>
-                            <option value="center">Центральный район</option>
-                            <option value="inner_ring">Ближний к центру / Срединный</option>
-                            <option value="residential">Спальный район</option>
-                            <option value="outskirts">Окраина города</option>
-                            <option value="suburb">Пригород / За городом</option>
-                        </select>
+                    <div class="md:col-4" style="position: relative;">
+                        <label for="street_input" class="form-label">Улица</label>
+                        <input type="text" class="form-control" id="street_input" name="street"
+                               oninput="handleStreetInput(this.value)"
+                               placeholder="{% if selected_city %}Начните вводить улицу...{% else %}Сначала выберите город...{% endif %}"
+                               autocomplete="off" required {% if not selected_city %}disabled{% endif %}>
+                        
+                        <div id="street_dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; background: #212529; border: 1px solid #495057; border-radius: 6px; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
+                        <small id="address-meta-info" style="color: #20c997; display: block; margin-top: 4px;"></small>
+
+                        <input type="hidden" id="hidden_district" name="district" value="unknown">
+                        <input type="hidden" id="hidden_lat" name="lat" value="">
+                        <input type="hidden" id="hidden_lon" name="lon" value="">
                     </div>
 
-                    <div class="col-md-4">
-                        <label for="street" class="form-label">Тип улицы</label>
-                        <select class="form-select form-control" id="street" name="street" required>
-                            <option value="" selected disabled>Выберите вариант...</option>
-                            <option value="avenue">Проспект / Центральная улица</option>
-                            <option value="main_street">Крупная магистраль / Шоссе</option>
-                            <option value="regular_street">Обычная жилая улица</option>
-                            <option value="lane">Переулок / Проезд / Бульвар</option>
-                            <option value="microdistrict">Микрорайон / ЖК / Квартал</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
+                    <div class="md:col-6">
                         <label for="house_number" class="form-label">Расположение дома</label>
                         <select class="form-select form-control" id="house_number" name="house_number" required>
                             <option value="" selected disabled>Выберите вариант...</option>
@@ -69,7 +62,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="md:col-6">
                         <label for="remoteness" class="form-label">Удаленность от центра или метро</label>
                         <select class="form-select form-control" id="remoteness" name="remoteness" required>
                             <option value="" selected disabled>Выберите вариант...</option>
@@ -84,10 +77,9 @@
         </div>
 
         <div class="card mb-4 shadow-sm">
-            </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="md:col-4">
                         <label for="property_type" class="form-label">Тип недвижимости</label>
                         <select class="form-select form-control" id="property_type" name="property_type" required onchange="toggleHouseFields()">
                             <option value="flat" selected>Квартира</option>
@@ -97,11 +89,12 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="md:col-4">
                         <label for="wall_material" class="form-label">Материал стен</label>
                         <select class="form-select form-control" id="wall_material" name="wall_material" required>
                             <option value="" selected disabled>Выберите материал...</option>
                             <option value="monolith">Монолит</option>
+                            <option value="monolith_brick">Монолит-кирпич</option>
                             <option value="brick">Кирпич</option>
                             <option value="panel">Панель</option>
                             <option value="block">Блочный</option>
@@ -109,51 +102,236 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="md:col-4">
                         <label for="build_year" class="form-label">Год постройки дома</label>
-                        <select class="form-select form-control" id="build_year" name="build_year" required>
-                            <option value="" selected disabled>Выберите период...</option>
-                            <option value="before_1955">До 1955 (Сталинки / Дореволюционные)</option>
-                            <option value="1956_1970">1956 – 1970 (Хрущевки)</option>
-                            <option value="1971_1990">1971 – 1990 (Брежневки / Поздний СССР)</option>
-                            <option value="1991_2005">1991 – 2005</option>
-                            <option value="2006_2015">2006 – 2015</option>
-                            <option value="2016_2022">2016 – 2022</option>
-                            <option value="2023_plus">2023 – настоящее время / Строится</option>
-                        </select>
+                        <input type="number" class="form-control" id="build_year" name="build_year"
+                               min="1850" max="2030" placeholder="Например: 2018" required>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="md:col-4">
                         <label for="total_floors" class="form-label">Этажность дома</label>
-                        <select class="form-select form-control" id="total_floors" name="total_floors" required>
-                            <option value="" selected disabled>Выберите этажность...</option>
-                            <option value="1_2">1 – 2 этажа</option>
-                            <option value="3_5">3 – 5 этажей</option>
-                            <option value="6_9">6 – 9 этажей</option>
-                            <option value="10_16">10 – 16 этажей</option>
-                            <option value="17_25">17 – 25 этажей</option>
-                            <option value="26_plus">26 и более этажей</option>
-                        </select>
+                        <input type="number" class="form-control" id="total_floors" name="total_floors"
+                               min="1" max="100" placeholder="Например: 16" required>
                     </div>
 
-                    <div class="col-md-4" id="floor_field">
+                    <div class="md:col-4" id="floor_field">
                         <label for="floor" class="form-label">Этаж расположения</label>
-                        <select class="form-select form-control" id="floor" name="floor" required>
-                            <option value="" selected disabled>Выберите этаж...</option>
-                            <option value="first">Первый этаж</option>
-                            <option value="2_5">2 – 5 этаж</option>
-                            <option value="6_10">6 – 10 этаж</option>
-                            <option value="11_20">11 – 20 этаж</option>
-                            <option value="21_plus">21 этаж и выше (не последний)</option>
-                            <option value="last">Последний этаж</option>
-                        </select>
+                        <input type="number" class="form-control" id="floor" name="floor"
+                               min="1" max="100" placeholder="Например: 7">
                     </div>
 
-                    <div class="col-md-4" id="elevator_field">
+                    <div class="md:col-4" id="elevator_field">
                         <label for="elevator" class="form-label">Наличие лифта</label>
                         <select class="form-select form-control" id="elevator" name="elevator" required>
                             <option value="none">Нет</option>
-                            <option value="none">Только пассажирский</option>
-                            <option value="none">Только грузовой</option>
-                            <option value="none">Пассажирский и грузовой</option>
+                            <option value="passenger">Только пассажирский</option>
+                            <option value="freight">Только грузовой</option>
+                            <option value="both">Пассажирский и грузовой</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-4">
+                        <label for="parking" class="form-label">Парковка</label>
+                        <select class="form-select form-control" id="parking" name="parking">
+                            <option value="open">Открытая во дворе</option>
+                            <option value="closed">Закрытый двор без машин</option>
+                            <option value="underground">Подземный паркинг</option>
+                            <option value="garage">Свой гараж / навес</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="md:col-3">
+                        <label for="rooms" class="form-label">Количество комнат</label>
+                        <select class="form-select form-control" id="rooms" name="rooms" required>
+                            <option value="0">Студия</option>
+                            <option value="1" selected>1 комната</option>
+                            <option value="2">2 комнаты</option>
+                            <option value="3">3 комнаты</option>
+                            <option value="4">4 комнаты</option>
+                            <option value="5">5 и более комнат</option>
+                        </select>
+                    </div>
+
+        <div class="md:col-3">
+
+                        <        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="md:col-3">
+                        <label for="rooms" class="form-label">Количество комнат</label>
+                        <select class="form-select form-control" id="rooms" name="rooms" required>
+                            <option value="0">Студия</option>
+                            <option value="1" selected>1 комната</option>
+                            <option value="2">2 комнаты</option>
+                            <option value="3">3 комнаты</option>
+                            <option value="4">4 комнаты</option>
+                            <option value="5">5 и более комнат</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-3">
+                        <label for="total_area" class="form-label">Общая площадь (м²)</label>
+                        <input type="number" step="0.1" min="8" max="2000" class="form-control"
+                               id="total_area" name="total_area" placeholder="Например: 54.5" required>
+                    </div>
+
+                    <div class="md:col-3">
+                        <label for="living_area" class="form-label">Жилая площадь (м²)</label>
+                        <input type="number" step="0.1" min="5" max="1500" class="form-control"
+                               id="living_area" name="living_area" placeholder="Например: 32.0">
+                    </div>
+
+                    <div class="md:col-3">
+                        <label for="kitchen_area" class="form-label">Площадь кухни (м²)</label>
+                        <input type="number" step="0.1" min="2" max="500" class="form-control"
+                               id="kitchen_area" name="kitchen_area" placeholder="Например: 11.5">
+                    </div>
+
+                    <div class="md:col-4">
+                        <label for="renovation" class="form-label">Состояние / Ремонт</label>
+                        <select class="form-select form-control" id="renovation" name="renovation" required>
+                            <option value="rough">Без отделки (черновая)</option>
+                            <option value="whitebox">Предчистовая (White Box)</option>
+                            <option value="cosmetic" selected>Косметический ремонт</option>
+                            <option value="euro">Евроремонт</option>
+                            <option value="designer">Дизайнерский ремонт</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-4">
+                        <label for="bathroom" class="form-label">Санузел</label>
+                        <select class="form-select form-control" id="bathroom" name="bathroom">
+                            <option value="combined">Совмещенный</option>
+                            <option value="separate">Раздельный</option>
+                            <option value="multiple">Два и более</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-4" id="balcony_field">
+                        <label for="balcony" class="form-label">Балкон / Лоджия</label>
+                        <select class="form-select form-control" id="balcony" name="balcony">
+                            <option value="none">Нет</option>
+                            <option value="balcony">Балкон</option>
+                            <option value="loggia">Лоджия</option>
+                            <option value="multiple">Несколько балконов / лоджий</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm" id="house_specific_card" style="display: none;">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="md:col-4">
+                        <label for="land_area" class="form-label">Площадь участка (соток)</label>
+                        <input type="number" step="0.1" min="0" max="1000" class="form-control"
+                               id="land_area" name="land_area" placeholder="Например: 6.0">
+                    </div>
+
+                    <div class="md:col-4">
+                        <label for="land_type" class="form-label">Категория земли</label>
+                        <select class="form-select form-control" id="land_type" name="land_type">
+                            <option value="izhs">ИЖС</option>
+                            <option value="snt">СНТ / ДНП</option>
+                            <option value="lph">ЛПХ</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-4">
+                        <label for="gas" class="form-label">Газоснабжение</label>
+                        <select class="form-select form-control" id="gas" name="gas">
+                            <option value="main">Магистральный газ в доме</option>
+                            <option value="border">По границе участка</option>
+                            <option value="none">Нет</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-solid theme-primary btn-lg w-100">Рассчитать стоимость</button>
+    </form>
+</div>
+
+<script>
+    let streetTimer = null;
+
+    function handleStreetInput(val) {
+        const query = val.trim();
+        const dropdown = document.getElementById('street_dropdown');
+        const metaInfo = document.getElementById('address-meta-info');
+        clearTimeout(streetTimer);
+
+        if (query.length < 2) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        streetTimer = setTimeout(function () {
+            const region = document.getElementById('predict_region').value;
+            const city = document.getElementById('predict_city').value;
+            const url = "{{ url_for('suggest_address') }}?q=" + encodeURIComponent(query) +
+                        "&region=" + encodeURIComponent(region) +
+                        "&city=" + encodeURIComponent(city);
+
+            fetch(url)
+                .then(function (r) { return r.json(); })
+                .then(function (list) {
+                    dropdown.innerHTML = '';
+                    if (!list || list.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+                    list.forEach(function (item) {
+                        const row = document.createElement('div');
+                        row.textContent = item.text || item.label;
+                        row.style.padding = '8px 12px';
+                        row.style.cursor = 'pointer';
+                        row.style.borderBottom = '1px solid #343a40';
+                        row.style.color = '#f8f9fa';
+                        row.style.backgroundColor = '#212529';
+
+                        row.onmouseover = function () { row.style.backgroundColor = '#343a40'; };
+                        row.onmouseout = function () { row.style.backgroundColor = '#212529'; };
+
+                        row.onclick = function () {
+                            document.getElementById('street_input').value = item.text || item.label;
+                            document.getElementById('hidden_district').value = item.district || 'unknown';
+                            document.getElementById('hidden_lat').value = item.lat || '';
+                            document.getElementById('hidden_lon').value = item.lon || '';
+                            metaInfo.textContent = item.district && item.district !== 'unknown' ? 'Район: ' + item.district : '';
+                            dropdown.style.display = 'none';
+                        };
+                        dropdown.appendChild(row);
+                    });
+                    dropdown.style.display = 'block';
+                });
+        }, 300);
+    }
+
+    document.addEventListener('click', function (e) {
+        const inp = document.getElementById('street_input');
+        const dd = document.getElementById('street_dropdown');
+        if (inp && dd && e.target !== inp && !dd.contains(e.target)) {
+            dd.style.display = 'none';
+        }
+    });
+
+    function toggleHouseFields() {
+        const propType = document.getElementById('property_type').value;
+        const isHouse = (propType === 'house' || propType === 'house_part');
+
+        document.getElementById('house_specific_card').style.display = isHouse ? 'block' : 'none';
+        document.getElementById('floor_field').style.display = isHouse ? 'none' : 'block';
+        document.getElementById('elevator_field').style.display = isHouse ? 'none' : 'block';
+        document.getElementById('balcony_field').style.display = isHouse ? 'none' : 'block';
+    }
+</script>
 {% endblock %}
